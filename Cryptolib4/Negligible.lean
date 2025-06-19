@@ -245,7 +245,7 @@ lemma const_mul_negl_negl  {f : ℕ → ℝ} (m : ℝ) : negligible f → neglig
 
 open Real
 
-lemma pow_two_le_log2_mul_exp: (fun x => x^2) ≤ (fun x=> (log 2)*rexp x) := by sorry
+lemma pow_two_le_log2_mul_exp: ∀ x:ℝ, x>0 → x^2 ≤ (log 2)*rexp x := by sorry
 
 
 theorem neg_exp_negl : negligible (λ n => (1 : ℝ) / 2 ^ n) := by
@@ -301,7 +301,9 @@ theorem neg_exp_negl : negligible (λ n => (1 : ℝ) / 2 ^ n) := by
         have h1:= pow_two_le_log2_mul_exp d
         simp at h1
         rw [mul_comm,pow_two] at h1
-        assumption
+        apply h1
+        have : 0<(c:ℝ) := by exact Nat.cast_pos'.mpr hc
+        linarith
 
       /-
         f(x):=(log 2)*rexp x - x^2
