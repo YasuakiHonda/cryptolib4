@@ -72,78 +72,151 @@ theorem negl_eq_neglLE (f : ℕ → ℝ) : negligibleLE f ↔ negligible f := by
   · exact fun a => neglLE_imp_negl f a
   · exact fun a => negl_imp_neglLE f a
 
+
+/-
+Two versions of negligible functions: a constant k is put on the denominator.
+The first one looks stronger because it talks on any k > 0.
+The second one looks weaker because it talks on some k > 0.
+However, they are equivalent.
+Also, they are equivalent to the original definition of the negligible function.
+-/
 def negligibleK (f : ℕ → ℝ) :=
-  ∃ k:NNReal, ∀ c > 0, ∃ n₀>0, ∀ n, n₀ ≤ n → abs (f n) < k / (n : ℝ)^c
+  ∀ k>0, ∀ c > 0, ∃ n₀>0, ∀ n, n₀ ≤ n → abs (f n) < k / (n : ℝ)^c
 
-lemma neglK_negl {f : ℕ→ℝ} : negligibleK f → negligible f := by
+def negligibleK_ex (f : ℕ → ℝ) :=
+  ∃ k>0, ∀ c > 0, ∃ n₀>0, ∀ n, n₀ ≤ n → abs (f n) ≤ k / (n : ℝ)^c
+
+lemma neglK_imp_neglK_ex (f : ℕ → ℝ) : negligibleK f → negligibleK_ex f := by
+  unfold negligibleK negligibleK_ex
   intro h
-  obtain ⟨k, hk⟩ := h
+  use 1
+  constructor
+  · norm_num
   intro c hc
+  obtain ⟨n₀, n₀_pos, h2⟩ := h 1 (by linarith) c hc
+  use n₀
+  constructor
+  · assumption
+  intro n hn
+  exact le_of_lt (h2 n hn)
 
-  by_cases k_pos : k > 0
-  case pos =>
-    -- use c+1 with negligibleK
-    have hc1 : c + 1 > 0 := by linarith
-    obtain ⟨n₀, hn₀, h₁⟩ := hk (c+1) hc1
+lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
+    negligibleK_ex f → negligible f := by
+  rintro ⟨k, k_pos, hk⟩
+  intro c c_pos
 
-    -- define n₁ = max(n₀, ⌈k⌉ + 1)
-    let n₁ := max n₀ (Nat.ceil k + 1)
-    use max n₀ (Nat.ceil k + 1)
+  -- 目標: ∃ n₀, ∀ n ≥ n₀, |f n| < 1 / n^c
+  -- まず c' を調整する：k / n^{c'} < 1 / n^c ⇔ k < n^{c' - c}
+  -- c' = c + δ にすれば OK
 
-    constructor
-    · have : n₀ ⊔ (⌈k⌉₊ + 1) ≥ n₀ := by exact Nat.le_max_left n₀ (⌈k⌉₊ + 1)
-      exact Nat.lt_of_lt_of_le hn₀ this
+  let δ := 1
+  let c' := c + δ
+  have c'_pos : c' > 0 := by exact Nat.add_pos_left c_pos δ
 
-    intro n hn
-    have hn₀_le : n₀ ≤ n := le_trans (le_max_left _ _) hn
-    have hk_bound : k < n := by
-      have : Nat.ceil k + 1 ≤ n := le_trans (le_max_right _ _) hn
-      have : k ≤ Nat.ceil k := Nat.le_ceil k
-      (expose_names; exact Nat.lt_of_ceil_lt this_1)
+  obtain ⟨n₀, hn₀_pos, H⟩ := hk c' c'_pos
+  use max n₀ (Nat.ceil (k+1))
+  constructor
+  · exact lt_sup_of_lt_left hn₀_pos
+  intro n hn
+  have : ⌈k+1⌉₊ ≤ n := by exact le_of_max_le_right hn
+  have : k+1 ≤ (n:ℝ) := by exact Nat.le_of_ceil_le this
+  have k_lt_n : k < (n:ℝ) := by
+    have : k < k+1 := by exact lt_add_one k
+    linarith
+  have k_div_n_le_one : k / (n : ℝ) < 1 := by
+    refine (div_lt_one ?_).mpr k_lt_n
+    linarith
+  have n₀_le_n : n₀ ≤ n := by exact le_of_max_le_left hn
 
-    have h1 : abs (f n) < k / (n : ℝ)^(c + 1) := by
-      apply h₁; assumption
+  specialize H n n₀_le_n
+  -- |f n| ≤ k / n^{c + 1}
+  -- これが 1 / n^c より小さいことを示す
+  have n_pos : n > 0 := by linarith
+  have pos_n : (n : ℝ) > 0 := Nat.cast_pos.mpr n_pos
 
-    -- k / n^(c+1) < 1 / n^c
-    have h2 : k / (n : NNReal)^(c + 1) < 1 / (n : NNReal)^c := by
-      have n_pos : (n : NNReal) > 0 := by exact gt_trans hk_bound k_pos
-      rw [div_lt_div_iff₀]
-      · ring_nf
+  have pow_pos : (n : ℝ)^c > 0 := by
+    exact pow_pos pos_n c
+  have ineq : k / (n : ℝ) ^ c' < 1 / (n : ℝ) ^ c := by
+    calc
+      k / (n : ℝ) ^ c' = (k / (n : ℝ)) / (n : ℝ) ^ c := by
+        rw [pow_succ]
         field_simp
-        exact hk_bound
-      · exact pow_pos n_pos (c + 1)
-      · exact pow_pos n_pos c
+        left
+        rw [mul_comm]
+      _ < 1 / (n : ℝ) ^ c := by
+        refine (div_lt_div_iff_of_pos_right ?_).mpr ?_
+        · exact pow_pos
+        · exact k_div_n_le_one
+  exact lt_of_le_of_lt H ineq
 
-    exact lt_trans h1 h2
+lemma neglK_imp_negl {f : ℕ→ℝ} : negligibleK f → negligible f := by
+  unfold negligible negligibleK
+  intro h
+  intro c hc
+  have hh := (h 1 (by linarith)) c hc
+  assumption
 
-  case neg =>
-    obtain ⟨n₀, hn₀, hh⟩ := hk c hc
-    use n₀
-    constructor
-    · exact hn₀
-    intro n hn
+lemma negl_imp_neglK {f : ℕ→ℝ} : negligible f → negligibleK f := by
+  unfold negligible negligibleK
+  intro h
+  intro k k_pos c hc
+  have hk := h c hc
 
-    have h1 : abs (f n) < k / (n : NNReal)^c := by
-      apply hh; assumption
-    have h2 : k / (n : NNReal)^c ≤ 0 := by
-      apply div_nonpos_of_nonpos_of_nonneg (le_of_not_gt k_pos)
-      exact pow_nonneg (Nat.cast_nonneg n) c
-    have h3 : 0 < 1/(n : NNReal)^c := by
-      have : 0 < n := by exact Nat.lt_of_lt_of_le hn₀ hn
-      have : 0 < (n:NNReal) := by exact Nat.cast_pos'.mpr this
-      have : 0 < (n:NNReal)^c := by exact pow_pos this c
-      exact one_div_pos.mpr this
-    have h4 : abs (f n) < 0 := by
-      apply lt_of_lt_of_le h1 h2
-    apply lt_trans h4 h3
+  -- use c+1 with negligibleK
+  have hc1 : c + 1 > 0 := by linarith
+  have h₂ := h (c + 1) hc1
+  obtain ⟨n₀, hn₀, h₃⟩ := h₂
+
+  -- define n₁ = max(n₀, ⌈k⌉ + 1)
+  let n₁ := max n₀ ((Nat.ceil (1/k)) + 1)
+  use n₁
+
+  constructor
+  · have : n₁ ≥ n₀ := by exact Nat.le_max_left n₀ (Nat.ceil (1/k) + 1)
+    exact Nat.lt_of_lt_of_le hn₀ this
+
+  intro n hn
+  have hn₀_le : n₀ ≤ n := le_trans (le_max_left _ _) hn
+  have hk_bound : 1/k < n := by
+    have t1: Nat.ceil (1/k) + 1 ≤ n := by exact le_of_max_le_right hn
+    exact Nat.lt_of_ceil_lt t1
+  have hn_bound : 1/(n:ℝ) < k := by
+    rw [one_div_lt]; assumption;
+    have : 1/k > 0 := by exact one_div_pos.mpr k_pos
+    linarith
+    assumption
+  -- 1 / n^(c+1) < k / n^c
+  have knc_bound : 1 / (n : ℝ)^(c + 1) < k / (n : ℝ)^c := by
+    calc
+      1 / (n : ℝ)^(c + 1) = (1 / (n : ℝ)^c) * (1 / n : ℝ) := by
+        rw [pow_succ, one_div_mul_one_div]
+      _ < (1 / (n : ℝ)^c) * k := by
+        refine (mul_lt_mul_left ?_).mpr hn_bound
+        refine one_div_pos.mpr ?_
+        have one_div_k_pos: 0<1/k := by
+          exact one_div_pos.mpr k_pos
+        have n_pos : (n : ℝ) > 0 := by linarith
+        apply pow_pos
+        linarith
+      _ = k / (n : ℝ)^c := by rw [one_div_mul_eq_div]
+
+  have h4 := h₃ n hn₀_le
+  linarith
 
 theorem neglK_eq_negl {f : ℕ→ℝ} : negligibleK f ↔ negligible f := by
   constructor
-  · exact fun a => neglK_negl a
-  · intro hf
-    rw [negligibleK]
-    use 1
-    exact fun c a => hf c a
+  · exact fun a => neglK_imp_negl a
+  · exact fun a => negl_imp_neglK a
+
+lemma neglK_ex_imp_neglK {f : ℕ → ℝ} : negligibleK_ex f → negligibleK f := by
+  intro h
+  rw [neglK_eq_negl]
+  exact neglK_ex_imp_negl h
+
+theorem neglK_eq_neglK_ex {f : ℕ → ℝ} : negligibleK f ↔ negligibleK_ex f := by
+  constructor
+  · exact fun a => neglK_imp_neglK_ex f a
+  · exact fun a => neglK_ex_imp_neglK a
 
 lemma zero_negl : negligible (λ _ => 0) := by
   intro c _
@@ -156,12 +229,14 @@ lemma zero_negl : negligible (λ _ => 0) := by
   apply pow_pos
   exact Nat.cast_pos'.mpr hn
 
-
 lemma negl_add_negl_negl {f g : ℕ → ℝ} : negligible f → negligible g → negligible (f + g) := by
   intro hf hg
   rw [← neglK_eq_negl]
-  rw [negligibleK]
+  rw [neglK_eq_neglK_ex]
+  unfold negligibleK_ex
   use 2
+  constructor
+  · norm_num
   intro c hc
 
   rw [negligible] at hf
@@ -199,7 +274,7 @@ lemma negl_add_negl_negl {f g : ℕ → ℝ} : negligible f → negligible g →
       exact Nat.zero_le ng
     have : nf+ng >0 := by apply Right.add_pos_of_pos_of_nonneg hf.1 this
     exact this
-  · assumption
+  · exact fun n a => le_of_lt (this n a)
 
 lemma bounded_negl_negl {f g : ℕ → ℝ} (hg : negligible g): (∀ n, abs (f n) ≤ abs (g n)) → negligible f := by
   intro h c hc
@@ -304,17 +379,4 @@ theorem neg_exp_negl : negligible (λ n => (1 : ℝ) / 2 ^ n) := by
         apply h1
         have : 0<(c:ℝ) := by exact Nat.cast_pos'.mpr hc
         linarith
-
-      /-
-        f(x):=(log 2)*rexp x - x^2
-        graph clearly shows that f(x)>0 for x≥0.
-        The formal proof should be a bit complex than thought.
-        For instance, f(0)=log 2 but f(x) is not monotone.
-        f'(x)=(log 2)*rexp x - 2*x has two zeros, log 2 and 2*log 2.
-        f'(log 2)=(log 2)*2 - 2* log 2=0
-        f'(2*log 2)=(log 2)*2*2 - 2* 2*log 2=0
-        f''(x) = (log 2)*rexp x - 2
-        f''(log 2)=2*(log 2) - 2=2*((log 2) - 1) < 0
-        f''(2*log 2)= 4*(log 2) - 2 = 2*(2*(log 2) -1) > 0
-      -/
       linarith
