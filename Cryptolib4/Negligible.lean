@@ -318,6 +318,54 @@ lemma const_mul_negl_negl  {f : ℕ → ℝ} (m : ℝ) : negligible f → neglig
     refine mul_le_mul_of_nonneg_right h ?_
     exact abs_nonneg (f n)
 
+
+
+def negligibleLO (f : ℕ → ℝ) :=
+  ∀ c > 0, f =o[Filter.atTop] (λ n => 1 / (n : ℝ)^c)
+
+lemma neglLO_imp_neglLE (f : ℕ → ℝ) : negligibleLO f → negligibleLE f := by
+  unfold negligibleLO negligibleLE
+  intro h c c_pos
+  have h1 := h c c_pos
+  rw [Asymptotics.isLittleO_iff] at h1
+  norm_num at h1
+  have h3 := @h1 1 (by linarith)
+
+  obtain ⟨n₁, h4⟩ := h3
+  field_simp at h4
+  use max n₁ 1
+  constructor
+  · have : max n₁ 1 ≥ 1 := by exact Nat.le_max_right n₁ 1
+    linarith
+  intro n hn
+  have : n₁≤n := by exact le_of_max_le_left hn
+  have h5 := h4 n this
+  assumption
+
+lemma neglK_imp_neglLO (f : ℕ → ℝ) : negligibleK f → negligibleLO f := by
+  unfold negligibleLO negligibleK
+  intro h1 c c_pos
+  rw [Asymptotics.isLittleO_iff]
+  norm_num
+  intro d d_pos
+
+  have h2 := h1 d d_pos c c_pos
+  obtain ⟨n₀, n₀_pos, h3⟩ := h2
+  use n₀
+  intro n' n'_pos
+  have h4 := h3 n' n'_pos
+  exact le_of_lt (h3 n' n'_pos)
+
+theorem neglLO_eq_negl (f : ℕ → ℝ) : negligibleLO f ↔ negligible f := by
+  constructor
+  · intro h
+    refine (negl_eq_neglLE f).mp ?_
+    exact neglLO_imp_neglLE f h
+  · intro h
+    refine neglK_imp_neglLO f ?_
+    exact negl_imp_neglK h
+
+
 open Real
 
 lemma pow_two_le_log2_mul_exp: ∀ x:ℝ, x>0 → x^2 ≤ (log 2)*rexp x := by sorry
