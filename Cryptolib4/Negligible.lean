@@ -75,7 +75,7 @@ lemma bounded_negl_negl {f g : ℕ → ℝ} (hg : negligible g): (∀ n, abs (f 
   constructor
   · exact h1
   intro n hn
-  exact gt_of_gt_of_ge (h2 n hn) (h n)
+  exact lt_of_le_of_lt (h n) (h2 n hn)
 
 lemma nat_mul_negl_negl {f : ℕ → ℝ} (m : ℕ) : negligible f → negligible (λ n => m * (f n)) := by
   intro hf

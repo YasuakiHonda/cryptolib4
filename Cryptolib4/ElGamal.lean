@@ -221,7 +221,7 @@ lemma G1_G2_lemma2 (mb : G) :
     simp [PMF.bind]
     simp_rw [uniform_zmod_prob]
     ext x
-    simp [pure, PMF.pure, ENNReal.tsum_mul_left, DFunLike.coe]
+    simp [pure, PMF.pure, DFunLike.coe]
     have rval : (∑' (a : ZMod q), if x = g ^ a.val then (q:ENNReal)⁻¹ else 0) = (↑q)⁻¹ := by
       apply G1_G2_lemma1
       apply exp_bij

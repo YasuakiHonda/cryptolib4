@@ -43,10 +43,10 @@ def bitVecEquivFin (n : ℕ) : BitVec n ≃ Fin (2^n) where
   invFun := BitVec.ofFin  -- Fin → BitVec
   left_inv := by
     intro bv
-    simp [BitVec.toFin_ofFin]
+    simp
   right_inv := by
     intro f
-    simp [BitVec.ofFin_toFin]
+    simp
 
 instance (n : ℕ) : Fintype (BitVec n) :=
   Fintype.ofEquiv (Fin (2^n)) (bitVecEquivFin n).symm

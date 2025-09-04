@@ -140,8 +140,6 @@ lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
       k / (n : ℝ) ^ c' = (k / (n : ℝ)) / (n : ℝ) ^ c := by
         rw [pow_succ]
         field_simp
-        left
-        rw [mul_comm]
       _ < 1 / (n : ℝ) ^ c := by
         refine (div_lt_div_iff_of_pos_right ?_).mpr ?_
         · exact pow_pos
@@ -308,4 +306,3 @@ lemma isLittleO_rpow_of_exp :
   rw [← h2] at h1
   refine isLittleO_pow_const_const_pow_of_one_lt c ?_
   linarith
-
