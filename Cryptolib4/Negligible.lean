@@ -9,7 +9,7 @@ import Mathlib.Tactic
 import Cryptolib4.Negligible_def
 
 
-lemma zero_negl : negligible (λ _ => 0) := by
+lemma zero_negl : negligible (fun _ => 0) := by
   intro c _
   let cr:NNReal := c
   use 1
@@ -67,7 +67,8 @@ lemma negl_add_negl_negl {f g : ℕ → ℝ} : negligible f → negligible g →
     exact this
   · exact fun n a => le_of_lt (this n a)
 
-lemma bounded_negl_negl {f g : ℕ → ℝ} (hg : negligible g): (∀ n, abs (f n) ≤ abs (g n)) → negligible f := by
+lemma bounded_negl_negl {f g : ℕ → ℝ} (hg : negligible g) :
+    (∀ n, abs (f n) ≤ abs (g n)) → negligible f := by
   intro h c hc
   obtain ⟨n₀,hn₀⟩ := hg c hc
   use n₀
@@ -77,19 +78,20 @@ lemma bounded_negl_negl {f g : ℕ → ℝ} (hg : negligible g): (∀ n, abs (f 
   intro n hn
   exact lt_of_le_of_lt (h n) (h2 n hn)
 
-lemma nat_mul_negl_negl {f : ℕ → ℝ} (m : ℕ) : negligible f → negligible (λ n => m * (f n)) := by
+lemma nat_mul_negl_negl {f : ℕ → ℝ} (m : ℕ) : negligible f → negligible (fun n => m * (f n)) := by
   intro hf
   induction m with
   | zero => norm_num; exact zero_negl
   | succ k ih =>
     norm_num
-    have d : (λn => ((k : ℝ) + 1) * (f n)) = (λn => (k : ℝ) * (f n)) + (λn => f n) := by
+    have d : (fun n => ((k : ℝ) + 1) * (f n)) = (fun n => (k : ℝ) * (f n)) + (fun n => f n) := by
       ring_nf
       rfl
     rw [d]
     exact negl_add_negl_negl ih hf
 
-lemma const_mul_negl_negl  {f : ℕ → ℝ} (m : ℝ) : negligible f → negligible (λ n => m * (f n)) := by
+lemma const_mul_negl_negl {f : ℕ → ℝ} (m : ℝ) :
+    negligible f → negligible (fun n => m * (f n)) := by
   intro hf
   have arch := exists_nat_gt (abs m)
   obtain ⟨k,hk⟩ := arch

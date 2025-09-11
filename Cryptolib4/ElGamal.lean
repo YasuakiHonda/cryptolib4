@@ -16,12 +16,13 @@ noncomputable section ElGamal
 
 variable (G : Type) [inst_1 : Fintype G] [inst_2 : CommGroup G] [inst_3 : DecidableEq G]
            (g : G) (g_gen_G : ∀ (x : G), x ∈ Subgroup.zpowers g)
-           (q : ℕ) [inst_4 : Fact (0 < q)] [inst_5 : NeZero q](G_card_q : Fintype.card G = q)
+           (q : ℕ) [inst_4 : Fact (0 < q)] [inst_5 : NeZero q]
+           (G_card_q : Fintype.card G = q)
            (A_state : Type) (A1 : G → PMF (G × G × A_state))
            (A2 : G → G → A_state → PMF (ZMod 2))
 
 
-def A2' : G × G → A_state → PMF (ZMod 2) := λ (gg : G × G) => A2 gg.1 gg.2
+def A2' : G × G → A_state → PMF (ZMod 2) := fun (gg : G × G) => A2 gg.1 gg.2
 
 -- From Lupo: Generates a public key `g^x.val`, and private key `x`
 def keygen : PMF (G × (ZMod q)) :=
@@ -48,7 +49,8 @@ def decrypt (x : ZMod q) (c : G × G) : G := (c.2 / (c.1^x.val))
 -/
 
 omit inst_1 inst_3 inst_4 inst_5 in
-lemma decrypt_eq_m (m : G) (x y : ZMod q) : decrypt G q x ((g^y.val), ((g^x.val)^y.val * m)) = m := by
+lemma decrypt_eq_m (m : G) (x y : ZMod q) :
+    decrypt G q x ((g^y.val), ((g^x.val)^y.val * m)) = m := by
   simp [decrypt]
   rw [(pow_mul g x.val y.val).symm]
   rw [(pow_mul g y.val x.val).symm]
@@ -104,7 +106,9 @@ def Game1 : PMF (ZMod 2) :=
     let y ← uniform_zmod q
     let m ← A1 (g^x.val)
     let b ← uniform_2
-    let ζ ← (do let z ← uniform_zmod q; let mb ← pure (if b = 0 then m.1 else m.2.1); pure (g^z.val * mb))
+    let ζ ← (do let z ← uniform_zmod q;
+                let mb ← pure (if b = 0 then m.1 else m.2.1);
+                pure (g^z.val * mb))
     let b' ← A2 (g^y.val) ζ m.2.2
     pure (1 + b + b')
 
@@ -163,7 +167,7 @@ theorem ZMod_CyclicG_Surjective : ∀ x:G, ∃ n : ZMod q, g ^ n.val = x := by
 
 omit inst_3 inst_4 in
 include inst_1 inst_2 g_gen_G G_card_q in
-lemma exp_bij : Function.Bijective (λ (z : ZMod q) => g^z.val) := by
+lemma exp_bij : Function.Bijective (fun (z : ZMod q) => g^z.val) := by
   apply (Fintype.bijective_iff_surjective_and_card _).mpr
   apply And.intro
   · -- surjective
@@ -175,16 +179,15 @@ lemma exp_bij : Function.Bijective (λ (z : ZMod q) => g^z.val) := by
 
 omit inst_3 inst_4 in
 include g_gen_G G_card_q in
-lemma exp_mb_bij (mb : G) : Function.Bijective (λ (z : ZMod q) => g ^z.val * mb) := by
-  have h : (λ (z : ZMod q)=> g ^ z.val * mb) =
-    ((λ (m : G)=> (m * mb)) ∘ (λ (z : ZMod q)=> g ^ z.val)) := rfl
+lemma exp_mb_bij (mb : G) : Function.Bijective (fun (z : ZMod q) => g ^z.val * mb) := by
+  have h : (fun (z : ZMod q)=> g ^ z.val * mb) =
+    ((fun (m : G)=> (m * mb)) ∘ (fun (z : ZMod q)=> g ^ z.val)) := rfl
   rw [h]
   apply Function.Bijective.comp
   · --  (λ (m : G), (m * mb)) bijective
     apply (Fintype.bijective_iff_injective_and_card _).mpr
     apply And.intro
-    ·
-      intro x a hxa
+    · intro x a hxa
       simp at hxa
       exact hxa
     · rfl
@@ -192,7 +195,7 @@ lemma exp_mb_bij (mb : G) : Function.Bijective (λ (z : ZMod q) => g ^z.val * mb
     exact exp_bij G g g_gen_G q G_card_q
 
 omit inst_1 inst_2 inst_4 inst_5 in
-lemma G1_G2_lemma1 (x : G) (exp : ZMod q → G) (y:ENNReal) (exp_bij : Function.Bijective exp) :
+lemma G1_G2_lemma1 (x : G) (exp : ZMod q → G) (y : ENNReal) (exp_bij : Function.Bijective exp) :
   (∑' (z : ZMod q), if (x = exp z) then (y : ENNReal) else 0) = y := by
 
     have inv := Function.bijective_iff_has_inverse.mp exp_bij
@@ -216,8 +219,8 @@ lemma G1_G2_lemma1 (x : G) (exp : ZMod q → G) (y:ENNReal) (exp_bij : Function.
 omit inst_4 in
 include g_gen_G G_card_q in
 lemma G1_G2_lemma2 (mb : G) :
-  (uniform_zmod q).bind (λ (z : ZMod q)=> pure (g^z.val * mb)) =
-  (uniform_zmod q).bind (λ (z : ZMod q)=> pure (g^z.val)) := by
+  (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val * mb)) =
+  (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val)) := by
     simp [PMF.bind]
     simp_rw [uniform_zmod_prob]
     ext x
@@ -238,8 +241,8 @@ lemma G1_G2_lemma2 (mb : G) :
 omit inst_4 in
 include g_gen_G G_card_q in
 lemma G1_G2_lemma3 (m : PMF G) :
-  m.bind (λ (mb : G)=> (uniform_zmod q).bind (λ (z : ZMod q)=> pure (g^z.val * mb))) =
-  (uniform_zmod q).bind (λ (z : ZMod q)=> pure (g^z.val)) := by
+  m.bind (fun (mb : G)=> (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val * mb))) =
+  (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val)) := by
     simp_rw [G1_G2_lemma2 G g g_gen_G q G_card_q _]
     bind_skip_const
     congr
@@ -263,10 +266,9 @@ theorem Game1_Game2 : Game1 G g q A_state A1 A2 = Game2 G g q A_state A1 A2 := b
 
 
 lemma G2_uniform_lemma (b' : ZMod 2) :
-  uniform_2.bind (λ(b : ZMod 2)=> pure (1 + b + b')) = uniform_2 := by
+  uniform_2.bind (fun (b : ZMod 2)=> pure (1 + b + b')) = uniform_2 := by
     fin_cases b'
-    ·
-      ring_nf
+    · ring_nf
       ext; rename ZMod 2 => a
       simp [uniform_2]
       simp_rw [uniform_zmod_prob]
@@ -280,11 +282,10 @@ lemma G2_uniform_lemma (b' : ZMod 2) :
         simp
       rw [h]
       simp
-    ·
-      ring_nf
+    · ring_nf
       ext
       simp [uniform_2, DFunLike.coe]
-      have h : uniform_2.bind (λ (b : ZMod 2) => pure (0 + b)) = uniform_2 := by simp [pure]
+      have h : uniform_2.bind (fun (b : ZMod 2) => pure (0 + b)) = uniform_2 := by simp [pure]
       ring_nf
       have h_zmod : (2 : ZMod 2) = 0 := rfl
       rw [h_zmod]
@@ -306,7 +307,7 @@ theorem Game2_uniform : Game2 G g q A_state A1 A2  = uniform_2 := by
   bind_skip_const
   exact G2_uniform_lemma _
 
-variable (ε: ENNReal)
+variable (ε : ENNReal)
 
 /- From Lupo:
   The advantage of the attacker (i.e. the composition of A1 and A2) in

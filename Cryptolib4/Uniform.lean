@@ -35,8 +35,9 @@ lemma uniform_group_prob :
   ∀ (g : G), (uniform_group G) g = 1 / Multiset.card (@Fintype.elems G).val := by
   intro g
 
-  have h1 : (uniform_group G)= (λ (a : G) =>
-    (Multiset.count a (@Fintype.elems G).val : ENNReal) / Multiset.card (@Fintype.elems G).val) := by
+  have h1 : (uniform_group G)= (fun (a : G) =>
+    (Multiset.count a
+      (@Fintype.elems G).val : ENNReal) / Multiset.card (@Fintype.elems G).val) := by
     ext
     simp [uniform_group]
     congr

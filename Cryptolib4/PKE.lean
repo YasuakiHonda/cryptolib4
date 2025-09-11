@@ -14,7 +14,7 @@ noncomputable section
   M = message space, C = ciphertext space
   A_state = type for state A1 passes to A2
 -/
-variable {G1 G2 M C A_state: Type} [DecidableEq M]
+variable {G1 G2 M C A_state : Type} [DecidableEq M]
           (keygen : PMF (G1 × G2))
           (encrypt : G1 → M → PMF C)
           (decrypt : G2 → C → M)

@@ -146,14 +146,14 @@ lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
         · exact k_div_n_le_one
   exact lt_of_le_of_lt H ineq
 
-lemma neglK_imp_negl {f : ℕ→ℝ} : negligibleK f → negligible f := by
+lemma neglK_imp_negl {f : ℕ → ℝ} : negligibleK f → negligible f := by
   unfold negligible negligibleK
   intro h
   intro c hc
   have hh := (h 1 (by linarith)) c hc
   assumption
 
-lemma negl_imp_neglK {f : ℕ→ℝ} : negligible f → negligibleK f := by
+lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
   unfold negligible negligibleK
   intro h
   intro k k_pos c hc
@@ -200,7 +200,7 @@ lemma negl_imp_neglK {f : ℕ→ℝ} : negligible f → negligibleK f := by
   have h4 := h₃ n hn₀_le
   linarith
 
-theorem neglK_eq_negl {f : ℕ→ℝ} : negligibleK f ↔ negligible f := by
+theorem neglK_eq_negl {f : ℕ → ℝ} : negligibleK f ↔ negligible f := by
   constructor
   · exact fun a => neglK_imp_negl a
   · exact fun a => negl_imp_neglK a
@@ -217,7 +217,7 @@ theorem neglK_eq_neglK_ex {f : ℕ → ℝ} : negligibleK f ↔ negligibleK_ex f
 
 
 def negligibleLO (f : ℕ → ℝ) :=
-  ∀ c > 0, f =o[Filter.atTop] (λ n => 1 / (n : ℝ)^c)
+  ∀ c > 0, f =o[Filter.atTop] (fun n => 1 / (n : ℝ)^c)
 
 lemma neglLO_imp_neglLE (f : ℕ → ℝ) : negligibleLO f → negligibleLE f := by
   unfold negligibleLO negligibleLE
@@ -269,7 +269,7 @@ open Filter Asymptotics
 theorem isLittleO_of_inv_of_pos {f g : ℕ → ℝ} (h : f =o[atTop] g)
     (hf : ∀ᶠ x in atTop, 0 < f x)
     (hg : ∀ᶠ x in atTop, 0 < g x) :
-    (λ x => 1 / g x) =o[atTop] (λ x => 1 / f x) := by
+    (fun x => 1 / g x) =o[atTop] (fun x => 1 / f x) := by
   rw [isLittleO_iff] at h ⊢
   intro k k_pos
 
