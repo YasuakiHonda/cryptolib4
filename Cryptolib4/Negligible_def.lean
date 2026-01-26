@@ -22,8 +22,7 @@ def negligibleLE (f : ℕ → ℝ) :=
 
 lemma negl_imp_neglLE (f : ℕ → ℝ) : negligible f → negligibleLE f := by
   unfold negligible negligibleLE
-  intro negf
-  intro c hc
+  intro negf c hc
   obtain ⟨n₀,hn₀_pos,h1⟩ := negf c hc
   use n₀
   constructor
@@ -148,15 +147,13 @@ lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
 
 lemma neglK_imp_negl {f : ℕ → ℝ} : negligibleK f → negligible f := by
   unfold negligible negligibleK
-  intro h
-  intro c hc
+  intro h c hc
   have hh := (h 1 (by linarith)) c hc
   assumption
 
 lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
   unfold negligible negligibleK
-  intro h
-  intro k k_pos c hc
+  intro h k k_pos c hc
   have hk := h c hc
 
   -- use c+1 with negligibleK
@@ -188,7 +185,7 @@ lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
       1 / (n : ℝ)^(c + 1) = (1 / (n : ℝ)^c) * (1 / n : ℝ) := by
         rw [pow_succ, one_div_mul_one_div]
       _ < (1 / (n : ℝ)^c) * k := by
-        refine (mul_lt_mul_left ?_).mpr hn_bound
+        refine (mul_lt_mul_iff_right₀ ?_).mpr hn_bound
         refine one_div_pos.mpr ?_
         have one_div_k_pos: 0<1/k := by
           exact one_div_pos.mpr k_pos
@@ -289,11 +286,8 @@ theorem isLittleO_of_inv_of_pos {f g : ℕ → ℝ} (h : f =o[atTop] g)
   norm_num  at hfg
   field_simp
 
-  refine (div_le_div_iff₀ ?_ ?_).mpr ?_
-  · exact hfg_pos2
-  · exact hfg_pos
-  · rw [one_mul]
-    exact hfg
+  rw [mul_comm]
+  exact hfg
 
 lemma isLittleO_rpow_of_exp :
   ∀ c>0, (fun x:ℕ => (x:ℝ)^c) =o[atTop] (fun x:ℕ => (2:ℝ) ^ x) := by
