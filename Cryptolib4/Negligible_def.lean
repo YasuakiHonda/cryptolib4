@@ -175,10 +175,12 @@ lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
     have t1: Nat.ceil (1/k) + 1 ≤ n := by exact le_of_max_le_right hn
     exact Nat.lt_of_ceil_lt t1
   have hn_bound : 1/(n:ℝ) < k := by
-    rw [one_div_lt]; assumption;
-    have : 1/k > 0 := by exact one_div_pos.mpr k_pos
-    linarith
-    assumption
+    rw [one_div_lt];
+    · assumption
+    · have : 1/k > 0 := by exact one_div_pos.mpr k_pos
+      linarith
+    · linarith
+
   -- 1 / n^(c+1) < k / n^c
   have knc_bound : 1 / (n : ℝ)^(c + 1) < k / (n : ℝ)^c := by
     calc

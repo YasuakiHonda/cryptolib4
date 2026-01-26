@@ -107,8 +107,8 @@ lemma inv_pow_eq_card_sub_pow (g : G) (m : ℕ) (H : m ≤ Fintype.card G) :
     have h : (g ^ m) * g ^ (Fintype.card G - m) = 1 := by
       rw [← pow_add]
       rw [Nat.add_sub_of_le]
-      exact pow_card_eq_one
-      exact H
+      · exact pow_card_eq_one
+      · exact H
     exact inv_eq_of_mul_eq_one_right h
 
 -- The pow_eq_mod_card lemma is already implemented in mathlib

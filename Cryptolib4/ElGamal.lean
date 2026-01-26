@@ -228,14 +228,14 @@ lemma G1_G2_lemma2 (mb : G) :
     have rval : (∑' (a : ZMod q), if x = g ^ a.val then (q:ENNReal)⁻¹ else 0) = (↑q)⁻¹ := by
       apply G1_G2_lemma1
       apply exp_bij
-      exact fun x => g_gen_G x
-      exact G_card_q
+      · exact fun x => g_gen_G x
+      · exact G_card_q
 
     have lval : (∑' (a : ZMod q), if x = g ^ a.val * mb then (q:ENNReal)⁻¹ else 0) = (↑q)⁻¹ := by
       apply G1_G2_lemma1
       apply exp_mb_bij
-      exact fun x => g_gen_G x
-      exact G_card_q
+      · exact fun x => g_gen_G x
+      · exact G_card_q
     rw [rval,lval]
 
 omit inst_4 in
