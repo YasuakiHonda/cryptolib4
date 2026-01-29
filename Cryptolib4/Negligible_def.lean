@@ -36,7 +36,7 @@ lemma neglLE_imp_negl (f : ℕ → ℝ) : negligibleLE f → negligible f := by
   intro h c hc
   have hh := (h (c + 1) (Nat.succ_pos c))
   obtain ⟨N,hNpos,hN⟩ := hh
-
+  --
   use N+1
   constructor
   · linarith
@@ -51,7 +51,7 @@ lemma neglLE_imp_negl (f : ℕ → ℝ) : negligibleLE f → negligible f := by
     have hN : 1 ≤ N := Nat.succ_le_of_lt hNpos
     have h2_le_Np1 : 2 ≤ N + 1 := Nat.add_le_add_right hN 1
     exact le_trans h2_le_Np1 hn
-
+  --
   have mult_lt : (1 / (n : ℝ)^c) * (1 / n:ℝ) < 1 / (n : ℝ)^c := by
     have hnR : (2 : ℝ) ≤ (n : ℝ) := Nat.cast_le.mpr n_ge_2
     have h_inv_lt_one : 1 / (n : ℝ) < 1 := by
@@ -102,15 +102,14 @@ lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
     negligibleK_ex f → negligible f := by
   rintro ⟨k, k_pos, hk⟩
   intro c c_pos
-
+  --
   -- 目標: ∃ n₀, ∀ n ≥ n₀, |f n| < 1 / n^c
   -- まず c' を調整する：k / n^{c'} < 1 / n^c ⇔ k < n^{c' - c}
   -- c' = c + δ にすれば OK
-
   let δ := 1
   let c' := c + δ
   have c'_pos : c' > 0 := by exact Nat.add_pos_left c_pos δ
-
+  --
   obtain ⟨n₀, hn₀_pos, H⟩ := hk c' c'_pos
   use max n₀ (Nat.ceil (k+1))
   constructor
@@ -125,13 +124,13 @@ lemma neglK_ex_imp_negl {f : ℕ → ℝ} :
     refine (div_lt_one ?_).mpr k_lt_n
     linarith
   have n₀_le_n : n₀ ≤ n := by exact le_of_max_le_left hn
-
+  --
   specialize H n n₀_le_n
   -- |f n| ≤ k / n^{c + 1}
   -- これが 1 / n^c より小さいことを示す
   have n_pos : n > 0 := by linarith
   have pos_n : (n : ℝ) > 0 := Nat.cast_pos.mpr n_pos
-
+  --
   have pow_pos : (n : ℝ)^c > 0 := by
     exact pow_pos pos_n c
   have ineq : k / (n : ℝ) ^ c' < 1 / (n : ℝ) ^ c := by
@@ -155,20 +154,20 @@ lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
   unfold negligible negligibleK
   intro h k k_pos c hc
   have hk := h c hc
-
+  --
   -- use c+1 with negligibleK
   have hc1 : c + 1 > 0 := by linarith
   have h₂ := h (c + 1) hc1
   obtain ⟨n₀, hn₀, h₃⟩ := h₂
-
+  --
   -- define n₁ = max(n₀, ⌈k⌉ + 1)
   let n₁ := max n₀ ((Nat.ceil (1/k)) + 1)
   use n₁
-
+  --
   constructor
   · have : n₁ ≥ n₀ := by exact Nat.le_max_left n₀ (Nat.ceil (1/k) + 1)
     exact Nat.lt_of_lt_of_le hn₀ this
-
+  --
   intro n hn
   have hn₀_le : n₀ ≤ n := le_trans (le_max_left _ _) hn
   have hk_bound : 1/k < n := by
@@ -180,7 +179,7 @@ lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
     · have : 1/k > 0 := by exact one_div_pos.mpr k_pos
       linarith
     · linarith
-
+  --
   -- 1 / n^(c+1) < k / n^c
   have knc_bound : 1 / (n : ℝ)^(c + 1) < k / (n : ℝ)^c := by
     calc
@@ -195,7 +194,7 @@ lemma negl_imp_neglK {f : ℕ → ℝ} : negligible f → negligibleK f := by
         apply pow_pos
         linarith
       _ = k / (n : ℝ)^c := by rw [one_div_mul_eq_div]
-
+  --
   have h4 := h₃ n hn₀_le
   linarith
 
@@ -225,7 +224,7 @@ lemma neglLO_imp_neglLE (f : ℕ → ℝ) : negligibleLO f → negligibleLE f :=
   rw [Asymptotics.isLittleO_iff] at h1
   norm_num at h1
   have h3 := @h1 1 (by linarith)
-
+  --
   obtain ⟨n₁, h4⟩ := h3
   field_simp at h4
   use max n₁ 1
@@ -243,7 +242,6 @@ lemma neglK_imp_neglLO (f : ℕ → ℝ) : negligibleK f → negligibleLO f := b
   rw [Asymptotics.isLittleO_iff]
   norm_num
   intro d d_pos
-
   have h2 := h1 d d_pos c c_pos
   obtain ⟨n₀, n₀_pos, h3⟩ := h2
   use n₀
@@ -271,12 +269,11 @@ theorem isLittleO_of_inv_of_pos {f g : ℕ → ℝ} (h : f =o[atTop] g)
     (fun x => 1 / g x) =o[atTop] (fun x => 1 / f x) := by
   rw [isLittleO_iff] at h ⊢
   intro k k_pos
-
   -- Combine all eventual conditions
   have := hf.and (hg.and (h k_pos))
   obtain ⟨N, hN⟩ := eventually_atTop.mp this
   norm_num
-
+  --
   use N
   intro n hn
   specialize hN n hn
@@ -287,7 +284,7 @@ theorem isLittleO_of_inv_of_pos {f g : ℕ → ℝ} (h : f =o[atTop] g)
     exact abs_pos_of_pos hg
   norm_num  at hfg
   field_simp
-
+  --
   rw [mul_comm]
   exact hfg
 

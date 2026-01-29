@@ -51,7 +51,7 @@ def decrypt (x : ZMod q) (c : G × G) : G := (c.2 / (c.1^x.val))
 omit inst_1 inst_3 inst_4 inst_5 in
 lemma decrypt_eq_m (m : G) (x y : ZMod q) :
     decrypt G q x ((g^y.val), ((g^x.val)^y.val * m)) = m := by
-  simp [decrypt]
+  simp only [decrypt]
   rw [(pow_mul g x.val y.val).symm]
   rw [(pow_mul g y.val x.val).symm]
   rw [mul_comm y.val x.val]
@@ -59,13 +59,13 @@ lemma decrypt_eq_m (m : G) (x y : ZMod q) :
 
 omit inst_1 inst_4 in
 theorem elgamal_correctness : pke_correctness (keygen G g q) (encrypt G g q) (decrypt G q) := by
-  simp [pke_correctness]
+  simp only [pke_correctness]
   intro m
-  simp [enc_dec, keygen, encrypt, bind]
+  simp only [enc_dec, keygen, encrypt, bind]
   bind_skip_const
   simp [pure]
   bind_skip_const
-  simp_rw [decrypt_eq_m]
+  rw [decrypt_eq_m]
   simp
 
 /-

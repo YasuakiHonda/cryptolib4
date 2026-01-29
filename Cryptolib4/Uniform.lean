@@ -2,57 +2,41 @@ import Cryptolib4.ToMathlib
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Data.ZMod.Defs
 
-variable (G : Type) [Fintype G] [Group G] [DecidableEq G]
+variable (G : Type) [Fintype G] [Group G]
 
 noncomputable section
 
-def uniform_bitvec (n : ℕ) : PMF (BitVec n) :=
-  PMF.ofMultiset (@Fintype.elems (BitVec n)).val (Bitvec.multiset_ne_zero n)
-
-def uniform_group : PMF G :=
-  PMF.ofMultiset (@Fintype.elems G).val (Group.multiset_ne_zero G)
-
--- Need a proof that 2 is positive
-instance : Fact (0 < 2) where
-  out := two_pos
-
-instance (n : ℕ) [i : Fact (0 < n)] : NeZero n := NeZero.of_pos i.out
-
-instance (n : ℕ) [i : NeZero n] : Fact (0 < n) := by
-  have h : n ≠ 0 := by exact NeZero.ne n
-  apply Iff.mpr fact_iff _
-  induction n with
-  | zero => contradiction
-  | succ n _ => exact Nat.succ_pos n
-
--- def uniform_zmod (n : ℕ) : Pmf (ZMod (Nat.succ n)) := uniform_group (ZMod (Nat.succ n))
-
+def uniform_bitvec (n : ℕ) : PMF (BitVec n) := PMF.uniformOfFintype (BitVec n)
+def uniform_group : PMF G := PMF.uniformOfFintype G
 def uniform_zmod (n : ℕ) [NeZero n] : PMF (ZMod n) := uniform_group (ZMod n)
 def uniform_2 : PMF (ZMod 2) := uniform_zmod 2
 
--- Had to modify from NNReal to ENNReal
-lemma uniform_group_prob :
-  ∀ (g : G), (uniform_group G) g = 1 / Multiset.card (@Fintype.elems G).val := by
-  intro g
+lemma uniform_bitvec_prob {n : ℕ} :
+    ∀ (bv : BitVec n), (uniform_bitvec n) bv = 1/(2^n : ENNReal) := by
+  intro bv
+  simp only [one_div]
+  simp only [uniform_bitvec]
+  have : (Fintype.card (BitVec n) : ENNReal) = 2^n := by
+    rw [Bitvec.card]
+    simp
+  rw [PMF.uniformOfFintype_apply]
+  exact congrArg Inv.inv this
 
-  have h1 : (uniform_group G)= (fun (a : G) =>
-    (Multiset.count a
-      (@Fintype.elems G).val : ENNReal) / Multiset.card (@Fintype.elems G).val) := by
-    ext
-    simp [uniform_group]
-    congr
-  have h2 : (uniform_group G) g =
-    Multiset.count g (@Fintype.elems G).val / Multiset.card (@Fintype.elems G).val := congr_fun h1 g
-  rw [h2]
-  have h3 : Multiset.count g (@Fintype.elems G).val = 1 := Multiset.count_univ g
-  rw [h3]
-  simp
+lemma uniform_group_prob :
+  ∀ (g : G), (uniform_group G) g = 1/((Fintype.card G):ENNReal) := by
+  intro g
+  simp only [one_div]
+  simp only [uniform_group]
+  exact PMF.uniformOfFintype_apply g
 
 lemma uniform_zmod_prob {n : ℕ} [NeZero n] : ∀ (a : ZMod n), (uniform_zmod n) a = 1/n := by
   intro a
-  simp [uniform_zmod]
-  have h1 := uniform_group_prob (ZMod n) a
-  have h2 : Multiset.card (@Fintype.elems (ZMod n)).val = n := ZMod.card n
-  rw [h2] at h1
-  rw [inv_eq_one_div]
-  exact h1
+  simp only [uniform_zmod]
+  rw [uniform_group_prob (ZMod n)]
+  rw [ZMod.card n]
+
+lemma uniform_2_prob : ∀ (a : ZMod 2), (uniform_2) a = 1/2 := by
+  intro a
+  simp only [uniform_2]
+  rw [@uniform_zmod_prob 2]
+  simp

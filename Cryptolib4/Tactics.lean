@@ -8,17 +8,17 @@ lemma bind_skip' (p : PMF α) (f g : α → PMF β) :
   (∀ (a : α), f a = g a) → p.bind f = p.bind g := by
     intro ha
     ext
-    simp
+    simp only [PMF.bind_apply]
     simp_rw [ha]
 
 lemma bind_skip_const' (pa : PMF α) (pb : PMF β) (f : α → PMF β) :
   (∀ (a : α), f a = pb) → pa.bind f = pb := by
     intro ha
     ext
-    simp
+    simp only [PMF.bind_apply]
     simp_rw [ha]
     simp [ENNReal.tsum_mul_right]
-
+    
 
 syntax "bind_skip" : tactic
 

@@ -1,4 +1,5 @@
 import Init.Data.BitVec.Basic
+import Mathlib.Data.BitVec
 import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.ZMod.Basic
 import Mathlib.GroupTheory.SpecificGroups.Cyclic
@@ -38,23 +39,17 @@ def IsCyclic.generator {G : Type} [Group G] [IsCyclic G] (g : G) : Prop :=
 
 namespace Bitvec
 
-def bitVecEquivFin (n : ℕ) : BitVec n ≃ Fin (2^n) where
-  toFun := BitVec.toFin  -- BitVec → Fin
-  invFun := BitVec.ofFin  -- Fin → BitVec
-  left_inv := by
-    intro bv
-    simp
-  right_inv := by
-    intro f
-    simp
 
-instance (n : ℕ) : Fintype (BitVec n) :=
-  Fintype.ofEquiv (Fin (2^n)) (bitVecEquivFin n).symm
+instance (n : ℕ) : Fintype (BitVec n) := by
+  apply Fintype.ofEquiv (Fin (2^n))
+  refine (RingEquiv.toEquiv ?_).symm
+  exact BitVec.equivFin
+
 
 lemma card (n : ℕ) : Fintype.card (BitVec n) = 2^n := by
   calc
     Fintype.card (BitVec n)
-    = Fintype.card (Fin (2^n)) := Fintype.card_congr (bitVecEquivFin n)
+    = Fintype.card (Fin (2^n)) := Fintype.card_congr (@BitVec.equivFin n)
     _= 2^n                  := Fintype.card_fin _
 
 

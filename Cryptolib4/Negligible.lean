@@ -29,16 +29,16 @@ lemma negl_add_negl_negl {f g : ℕ → ℝ} : negligible f → negligible g →
   constructor
   · norm_num
   intro c hc
-
+  --
   rw [negligible] at hf
   rcases (hf c hc) with ⟨nf,hf⟩
   rw [negligible] at hg
   rcases (hg c hc) with ⟨ng,hg⟩
-
+  --
   let nfg := nf + ng
   have : ∀n, nfg ≤ n → abs ((f+g) n) < 2 / ↑n ^ c := by
     intro n nfg_n
-
+  --
     have nfg_f: abs (f n) < 1 / ↑n ^ c := by
       have nf_le_nfg: nf ≤ nfg := by exact Nat.le_add_right nf ng
       have nf_le_n : nf≤n := by linarith
