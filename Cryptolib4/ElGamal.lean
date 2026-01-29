@@ -59,14 +59,15 @@ lemma decrypt_eq_m (m : G) (x y : ZMod q) :
 
 omit inst_1 inst_4 in
 theorem elgamal_correctness : pke_correctness (keygen G g q) (encrypt G g q) (decrypt G q) := by
-  simp only [pke_correctness]
+  unfold pke_correctness keygen encrypt enc_dec
   intro m
-  simp only [enc_dec, keygen, encrypt, bind]
+  simp only [bind_assoc, pure_bind]
+  simp only [bind, pure]
+  simp_rw [decrypt_eq_m G g q m]
+  simp only [if_true]
   bind_skip_const
-  simp [pure]
   bind_skip_const
-  rw [decrypt_eq_m]
-  simp
+  rfl
 
 /-
   -----------------------------------------------------------
@@ -94,7 +95,8 @@ theorem SSG_DDH0 : SSG (keygen G g q) (encrypt G g q) A1 (A2' G A_state A2) =
     simp only [SSG, DDH0, bind, keygen, encrypt, D]
     simp_rw [PMF.bind_bind (uniform_zmod q)]
     bind_skip
-    simp [pure]
+    simp only [pure]
+    simp only [mul_ite, PMF.pure_bind, PMF.bind_pure]
     simp_rw [PMF.bind_comm (uniform_zmod q)]
     simp only [A2']
     repeat bind_skip
@@ -188,16 +190,16 @@ lemma exp_mb_bij (mb : G) : Function.Bijective (fun (z : ZMod q) => g ^z.val * m
     apply (Fintype.bijective_iff_injective_and_card _).mpr
     apply And.intro
     · intro x a hxa
-      simp at hxa
-      exact hxa
+      apply mul_right_injective mb
+      dsimp at hxa ⊢
+      grind
     · rfl
   · -- (λ (z : zmod q), g ^ z.val) bijective
     exact exp_bij G g g_gen_G q G_card_q
 
-omit inst_1 inst_2 inst_4 inst_5 in
+omit inst_1 inst_2 inst_4 in
 lemma G1_G2_lemma1 (x : G) (exp : ZMod q → G) (y : ENNReal) (exp_bij : Function.Bijective exp) :
   (∑' (z : ZMod q), if (x = exp z) then (y : ENNReal) else 0) = y := by
-
     have inv := Function.bijective_iff_has_inverse.mp exp_bij
     cases inv with
     | intro exp_inv inv_h =>
@@ -216,29 +218,30 @@ lemma G1_G2_lemma1 (x : G) (exp : ZMod q → G) (y : ENNReal) (exp_bij : Functio
       simp_rw [bij_eq]
       simp
 
-omit inst_4 in
+omit inst_3 inst_4 in
 include g_gen_G G_card_q in
 lemma G1_G2_lemma2 (mb : G) :
   (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val * mb)) =
   (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val)) := by
-    simp [PMF.bind]
+    classical
+    simp only [PMF.bind]
     simp_rw [uniform_zmod_prob]
     ext x
-    simp [pure, PMF.pure, DFunLike.coe]
-    have rval : (∑' (a : ZMod q), if x = g ^ a.val then (q:ENNReal)⁻¹ else 0) = (↑q)⁻¹ := by
+    simp only [pure, PMF.pure, DFunLike.coe]
+    rw [ENNReal.tsum_mul_left,ENNReal.tsum_mul_left]
+    have rval : (∑' (a : ZMod q), if x = (g ^ a.val) then (1:ENNReal) else 0) = 1 := by
       apply G1_G2_lemma1
       apply exp_bij
       · exact fun x => g_gen_G x
       · exact G_card_q
-
-    have lval : (∑' (a : ZMod q), if x = g ^ a.val * mb then (q:ENNReal)⁻¹ else 0) = (↑q)⁻¹ := by
+    have lval : (∑' (a : ZMod q), if x = (g ^ a.val)*mb then (1:ENNReal) else 0) = 1 := by
       apply G1_G2_lemma1
       apply exp_mb_bij
       · exact fun x => g_gen_G x
       · exact G_card_q
-    rw [rval,lval]
+    rw [rval, lval]
 
-omit inst_4 in
+omit inst_3 inst_4 in
 include g_gen_G G_card_q in
 lemma G1_G2_lemma3 (m : PMF G) :
   m.bind (fun (mb : G)=> (uniform_zmod q).bind (fun (z : ZMod q)=> pure (g^z.val * mb))) =
@@ -252,7 +255,7 @@ lemma G1_G2_lemma3 (m : PMF G) :
   winning Game1 (i.e. guessing the correct bit) is equal to the
   probability of the attacker winning Game2.
 -/
-omit inst_4 in
+omit inst_3 inst_4 in
 include g_gen_G G_card_q in
 theorem Game1_Game2 : Game1 G g q A_state A1 A2 = Game2 G g q A_state A1 A2 := by
   simp only [Game1, Game2]
@@ -260,7 +263,7 @@ theorem Game1_Game2 : Game1 G g q A_state A1 A2 = Game2 G g q A_state A1 A2 := b
   bind_skip
   bind_skip
   bind_skip
-  simp [bind, -PMF.bind_pure, -PMF.bind_bind]
+  simp only [bind]
   simp_rw [PMF.bind_comm (uniform_zmod q)]
   rw [G1_G2_lemma3 G g g_gen_G q G_card_q _ ]
 
@@ -270,14 +273,15 @@ lemma G2_uniform_lemma (b' : ZMod 2) :
     fin_cases b'
     · ring_nf
       ext; rename ZMod 2 => a
-      simp [uniform_2]
-      simp_rw [uniform_zmod_prob]
-      simp [ENNReal.tsum_mul_left]
+      simp
+      simp_rw [uniform_2_prob]
+      rw [← Finset.mul_sum]
       have zmod_eq_comm : ∀(x : ZMod 2), (a = 1+ x) = (x = 1 + a) := by
         intro x
-        fin_cases a <;> fin_cases x <;> simp <;> exact rfl
-      have h : (∑' (x : ZMod 2), (pure (1 + x) : PMF (ZMod 2)) a) = 1 := by
-        simp [pure, PMF.pure, DFunLike.coe]
+        fin_cases a <;> fin_cases x <;> simp only [Nat.reduceAdd, Fin.zero_eta, Fin.isValue,
+          add_zero, zero_ne_one] <;> exact Eq.propIntro (congrFun rfl) (congrFun rfl)
+      have h : (∑ (x : ZMod 2), (pure (1 + x) : PMF (ZMod 2)) a) = 1 := by
+        simp only [pure, PMF.pure, DFunLike.coe]
         simp_rw [zmod_eq_comm]
         simp
       rw [h]
@@ -291,21 +295,21 @@ lemma G2_uniform_lemma (b' : ZMod 2) :
       rw [h_zmod]
       exact congrFun (congrArg Subtype.val h) _
 
+
 /- From Lupo:
   The probability of the attacker (i.e. the composition of A1 and A2)
   winning Game2 (i.e. guessing the correct bit) is equal to a coin flip.
 -/
 omit inst_1 inst_3 inst_4 in
 theorem Game2_uniform : Game2 G g q A_state A1 A2  = uniform_2 := by
-  simp [Game2, bind]
+  simp only [Game2, bind]
   bind_skip_const
   bind_skip_const
   bind_skip_const
   simp_rw [PMF.bind_comm uniform_2]
   bind_skip_const
   bind_skip_const
-  bind_skip_const
-  exact G2_uniform_lemma _
+  apply G2_uniform_lemma
 
 variable (ε : ENNReal)
 
@@ -316,7 +320,7 @@ variable (ε : ENNReal)
   assumption holds for the group `G`, we conclude `ε` is negligble, and
   therefore ElGamal is, by definition, semantically secure.
 -/
-omit inst_4 in
+omit inst_3 inst_4 in
 include g_gen_G G_card_q in
 theorem elgamal_semantic_security (DDH_G : DDH G g q (D G A_state A1 A2) ε) :
   pke_semantic_security (keygen G g q) (encrypt G g q) A1 (A2' G A_state A2) ε := by
