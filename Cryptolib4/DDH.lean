@@ -8,7 +8,6 @@
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 import Mathlib.Probability.ProbabilityMassFunction.Monad
 import Mathlib.Probability.ProbabilityMassFunction.Constructions
-import Cryptolib4.ToMathlib
 import Cryptolib4.Uniform
 
 noncomputable section

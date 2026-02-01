@@ -1,5 +1,4 @@
 import Cryptolib4.World
-import Cryptolib4.ToMathlib
 import Cryptolib4.Uniform
 import Cryptolib4.Tactics
 import Cryptolib4.PKE

@@ -8,7 +8,6 @@
 import Cryptolib4.DDH
 import Cryptolib4.PKE
 import Cryptolib4.Tactics
-import Cryptolib4.ToMathlib
 import Cryptolib4.Uniform
 import Init.Data.Nat.Div.Basic
 

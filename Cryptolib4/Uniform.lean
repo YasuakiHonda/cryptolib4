@@ -1,4 +1,4 @@
-import Cryptolib4.ToMathlib
+import Mathlib.Data.BitVec
 import Mathlib.Probability.Distributions.Uniform
 import Mathlib.Data.ZMod.Defs
 
@@ -6,21 +6,35 @@ variable (G : Type) [Fintype G] [Group G]
 
 noncomputable section
 
+instance (n : ℕ) : Fintype (BitVec n) := by
+  apply Fintype.ofEquiv (Fin (2^n))
+  refine (RingEquiv.toEquiv ?_).symm
+  exact BitVec.equivFin
+
+lemma card (n : ℕ) : Fintype.card (BitVec n) = 2^n := by
+  calc
+    Fintype.card (BitVec n)
+    = Fintype.card (Fin (2^n)) := Fintype.card_congr (@BitVec.equivFin n)
+    _= 2^n                  := Fintype.card_fin _
+
+instance : ∀ (n : ℕ) [NeZero n], Group (ZMod n) := fun
+  | .zero => Multiplicative.group
+  | .succ _ => Multiplicative.group
+
 def uniform_bitvec (n : ℕ) : PMF (BitVec n) := PMF.uniformOfFintype (BitVec n)
 def uniform_group : PMF G := PMF.uniformOfFintype G
 def uniform_zmod (n : ℕ) [NeZero n] : PMF (ZMod n) := uniform_group (ZMod n)
 def uniform_2 : PMF (ZMod 2) := uniform_zmod 2
+
 
 lemma uniform_bitvec_prob {n : ℕ} :
     ∀ (bv : BitVec n), (uniform_bitvec n) bv = 1/(2^n : ENNReal) := by
   intro bv
   simp only [one_div]
   simp only [uniform_bitvec]
-  have : (Fintype.card (BitVec n) : ENNReal) = 2^n := by
-    rw [Bitvec.card]
-    simp
   rw [PMF.uniformOfFintype_apply]
-  exact congrArg Inv.inv this
+  rw [card n]
+  norm_cast
 
 lemma uniform_group_prob :
   ∀ (g : G), (uniform_group G) g = 1/((Fintype.card G):ENNReal) := by
