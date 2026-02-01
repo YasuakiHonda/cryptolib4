@@ -272,7 +272,7 @@ lemma G2_uniform_lemma (b' : ZMod 2) :
     fin_cases b'
     · ring_nf
       ext; rename ZMod 2 => a
-      simp
+      simp only [Nat.reduceAdd, Fin.zero_eta, Fin.isValue, add_zero, PMF.bind_apply, tsum_fintype]
       simp_rw [uniform_2_prob]
       rw [← Finset.mul_sum]
       have zmod_eq_comm : ∀(x : ZMod 2), (a = 1+ x) = (x = 1 + a) := by
